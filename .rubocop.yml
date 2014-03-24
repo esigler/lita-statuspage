@@ -1,0 +1,11 @@
+ClassLength:
+  Max: 400
+
+MethodLength:
+  Max: 20
+
+LineLength:
+  Max: 120
+
+Documentation:
+  Enabled: false
