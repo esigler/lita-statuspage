@@ -38,6 +38,7 @@ Lita statuspage incident new name:"<name>"       - Create a new realtime inciden
                              message:"<message>" - (Optional) The initial message
                              twitter:<state>     - (Optional) Post the new incident to Twitter, one of (true|t|false|f) (default:false)
                              impact:<state>      - (Optional) Override calculated impact value, one of: (none|minor|major|critical)
+```
 
 #### Update
 
@@ -47,6 +48,7 @@ Lita statuspage incident update (latest|id:<id>) - Update an incident
                          message:"<message>"     - (Optional) The body of the new incident update that will be created
                          twitter:<state>         - (Optional) Post the new incident update to twitter, one of: (true|t|false|f) (default:false)
                          impact:<state>          - (Optional) Override calculated impact value, one of (none|minor|major|critical)
+```
 
 #### Misc
 
