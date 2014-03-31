@@ -20,7 +20,7 @@ module Lita
       )
 
       route(
-        /^statuspage\sincident\slist\sall$/,
+        /^statuspage\sincident\slist(\sall)?$/,
         :incident_list_all,
         command: true,
         help: {
@@ -65,7 +65,7 @@ module Lita
       )
 
       route(
-        /^statuspage\scomponent\slist$/,
+        /^statuspage\scomponent\slist(\sall)?$/,
         :component_list,
         command: true,
         help: {
