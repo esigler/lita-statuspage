@@ -52,7 +52,9 @@ Lita statuspage incident update (latest|id:<id>) - Update an incident
                          impact:<state>          - (Optional) Override calculated impact value, one of (none|minor|major|critical)
 ```
 
-#### Listing incidents
+**NOTE:** If either of status or message is modified, a new incident update will be generated. You should update both of these attributes at the same time to avoid two separate incident updates being generated.
+
+#### List
 
 ```
 Lita statuspage incident list all        - List all incidents
@@ -60,21 +62,20 @@ Lita statuspage incident list scheduled  - List scheduled incidents
 Lita statuspage incident list unresolved - List unresolved incidents
 ```
 
-#### Deleting incidents
+#### Delete
 
 ```
 Lita statuspage incident delete latest  - Delete latest incident
 Lita statuspage incident delete id:<id> - Delete a specific incident
 ```
 
-NOTE: if either of status or message is modified, a new incident update will be generated. You should update both of these attributes at the same time to avoid two separate incident updates being generated
 
 ### Components
 
 ```
-Lita statuspage component list                             - Lists all components
+Lita statuspage component list all                       - Lists all components
 Lita statuspage component update (id:<id>|name:"<name>") - Updates the component
-                          status:<status>                  - One of (operational|degraded_performance|partial_outage|major_outage|none)
+                          status:<status>                - One of (operational|degraded_performance|partial_outage|major_outage|none)
 ```
 
 ## License
