@@ -1,9 +1,31 @@
 require 'spec_helper'
 
 describe Lita::Handlers::Statuspage, lita_handler: true do
+  let(:incidents) do
+    File.read('spec/files/incidents.json')
+  end
+
+  let(:incidents_empty) do
+    '[]'
+  end
+
+  let(:incidents_scheduled) do
+    File.read('spec/files/incidents_scheduled.json')
+  end
+
+  let(:incidents_unresolved) do
+    File.read('spec/files/incidents_unresolved.json')
+  end
+
+  let(:incident_deleted) do
+    File.read('spec/files/incident_deleted.json')
+  end
+
   it { routes_command('statuspage incident new name:"foo"').to(:incident_new) }
   it { routes_command('statuspage incident update latest').to(:incident_update) }
-  it { routes_command('statuspage incident list').to(:incident_list) }
+  it { routes_command('statuspage incident list all').to(:incident_list_all) }
+  it { routes_command('statuspage incident list scheduled').to(:incident_list_scheduled) }
+  it { routes_command('statuspage incident list unresolved').to(:incident_list_unresolved) }
   it { routes_command('statuspage incident delete latest').to(:incident_delete_latest) }
   it { routes_command('statuspage incident delete id:omgwtfbbq').to(:incident_delete) }
   it { routes_command('statuspage component list').to(:component_list) }
@@ -21,7 +43,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
 
   describe 'without valid config' do
     it 'should error out on any command' do
-      expect { send_command('statuspage incident list') }.to raise_error('Bad config')
+      expect { send_command('statuspage incident list all') }.to raise_error('Missing config')
     end
   end
 
@@ -32,19 +54,123 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     end
 
     describe '#incident_new' do
-      it 'shows a warning' do
-        send_command('statuspage incident new name:"foo"')
-        expect(replies.last).to eq('Not implemented yet.')
-      end
     end
 
     describe '#incident_update' do
     end
 
-    describe '#incident_list' do
+    describe '#incident_list_all' do
+      it 'shows a list of incidents if there are any' do
+        response = double('Faraday::Response', status: 200, body: incidents)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list all')
+        expect(replies.last).to eq('Test Incident (created: 2014-03-24, ' \
+                                   'status: resolved, id: td9ftgzcyz4m)')
+      end
+
+      it 'shows a warning if there arent any' do
+        response = double('Faraday::Response', status: 200, body: incidents_empty)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list all')
+        expect(replies.last).to eq('No incidents to list')
+      end
+
+      it 'shows an error if there was an issue fetching the incidents' do
+        response = double('Faraday::Response', status: 500)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list all')
+        expect(replies.last).to eq('Error fetching incidents')
+      end
+    end
+
+    describe '#incident_list_scheduled' do
+      it 'shows a list of incidents if there are any' do
+        response = double('Faraday::Response', status: 200, body: incidents_scheduled)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list scheduled')
+        expect(replies.last).to eq('Test Maintenance (created: 2014-03-30, ' \
+                                   'status: scheduled, id: 3tzsm37ryws0)')
+      end
+
+      it 'shows a warning if there arent any' do
+        response = double('Faraday::Response', status: 200, body: incidents_empty)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list scheduled')
+        expect(replies.last).to eq('No incidents to list')
+      end
+
+      it 'shows an error if there was an issue fetching the incidents' do
+        response = double('Faraday::Response', status: 500)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list scheduled')
+        expect(replies.last).to eq('Error fetching incidents')
+      end
+    end
+
+    describe '#incident_list_unresolved' do
+      it 'shows a list of incidents if there are any' do
+        response = double('Faraday::Response', status: 200, body: incidents_unresolved)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list unresolved')
+        expect(replies.last).to eq('Unresolved incident (created: 2014-03-30, ' \
+                                   'status: investigating, id: 2ttv50n0n8zj)')
+      end
+
+      it 'shows a warning if there arent any' do
+        response = double('Faraday::Response', status: 200, body: incidents_empty)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list scheduled')
+        expect(replies.last).to eq('No incidents to list')
+      end
+
+      it 'shows an error if there was an issue fetching the incidents' do
+        response = double('Faraday::Response', status: 500)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident list scheduled')
+        expect(replies.last).to eq('Error fetching incidents')
+      end
+    end
+
+    describe '#incident_delete_latest' do
+      it 'shows an ack if the incident was deleted' do
+        get_response = double('Faraday::Response', status: 200, body: incidents_unresolved)
+        delete_response = double('Faraday::Response', status: 200, body: incident_deleted)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:delete).and_return(delete_response)
+        send_command('statuspage incident delete latest')
+        expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
+      end
+
+      it 'shows a warning if there wasnt an incident to delete'
+
+      it 'shows an error if there was an issue deleting the incident'
     end
 
     describe '#incident_delete' do
+      it 'shows an ack if the incident was deleted' do
+        get_response = double('Faraday::Response', status: 200, body: incidents_unresolved)
+        delete_response = double('Faraday::Response', status: 200, body: incident_deleted)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:delete).and_return(delete_response)
+        send_command('statuspage incident delete id:2ttv50n0n8zj')
+        expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
+      end
+
+      it 'shows a warning if there wasnt an incident to delete' do
+        response = double('Faraday::Response', status: 404)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident delete id:2ttv50n0n8zj')
+        expect(replies.last).to eq('Incident not found')
+      end
+
+      it 'shows an error if there was an issue deleting the incident' do
+        get_response = double('Faraday::Response', status: 200, body: incidents_unresolved)
+        delete_response = double('Faraday::Response', status: 500)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:delete).and_return(delete_response)
+        send_command('statuspage incident delete id:2ttv50n0n8zj')
+        expect(replies.last).to eq('Error deleting incident')
+      end
     end
 
     describe '#component_list' do

@@ -50,10 +50,17 @@ Lita statuspage incident update (latest|id:<id>) - Update an incident
                          impact:<state>          - (Optional) Override calculated impact value, one of (none|minor|major|critical)
 ```
 
-#### Misc
+#### Listing incidents
 
 ```
-Lita statuspage incident list           - List all incidents
+Lita statuspage incident list            - List all incidents
+Lita statuspage incident list scheduled  - List scheduled incidents
+Lita statuspage incident list unresolved - List unresolved incidents
+```
+
+#### Deleting incidents
+
+```
 Lita statuspage incident delete latest  - Delete latest incident
 Lita statuspage incident delete id:<id> - Delete a specific incident
 ```
