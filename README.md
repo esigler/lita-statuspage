@@ -53,7 +53,7 @@ Lita statuspage incident update (latest|id:<id>) - Update an incident
 #### Listing incidents
 
 ```
-Lita statuspage incident list            - List all incidents
+Lita statuspage incident list all        - List all incidents
 Lita statuspage incident list scheduled  - List scheduled incidents
 Lita statuspage incident list unresolved - List unresolved incidents
 ```
@@ -71,7 +71,7 @@ NOTE: if either of status or message is modified, a new incident update will be 
 
 ```
 Lita statuspage component list                             - Lists all components
-Lita statuspage component update (id:"<id>"|name:"<name>") - Updates the component
+Lita statuspage component update (id:<id>|name:"<name>") - Updates the component
                           status:<status>                  - One of (operational|degraded_performance|partial_outage|major_outage|none)
 ```
 

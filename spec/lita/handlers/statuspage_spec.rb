@@ -29,6 +29,10 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     '[]'
   end
 
+  let(:component_update) do
+    File.read('spec/files/component_update.json')
+  end
+
   it { routes_command('statuspage incident new name:"foo"').to(:incident_new) }
   it { routes_command('statuspage incident update latest').to(:incident_update) }
   it { routes_command('statuspage incident list all').to(:incident_list_all) }
@@ -84,7 +88,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       end
 
       it 'shows an error if there was an issue fetching the incidents' do
-        response = double('Faraday::Response', status: 500)
+        response = double('Faraday::Response', status: 500,  body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident list all')
         expect(replies.last).to eq('Error fetching incidents')
@@ -108,7 +112,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       end
 
       it 'shows an error if there was an issue fetching the incidents' do
-        response = double('Faraday::Response', status: 500)
+        response = double('Faraday::Response', status: 500, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident list scheduled')
         expect(replies.last).to eq('Error fetching incidents')
@@ -132,7 +136,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       end
 
       it 'shows an error if there was an issue fetching the incidents' do
-        response = double('Faraday::Response', status: 500)
+        response = double('Faraday::Response', status: 500, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident list scheduled')
         expect(replies.last).to eq('Error fetching incidents')
@@ -150,7 +154,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       end
 
       it 'shows a warning if there wasnt an incident to delete' do
-        response = double('Faraday::Response', status: 404)
+        response = double('Faraday::Response', status: 404, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident delete latest')
         expect(replies.last).to eq('No latest incident found')
@@ -158,7 +162,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
 
       it 'shows an error if there was an issue deleting the incident' do
         get_response = double('Faraday::Response', status: 200, body: incidents_unresolved)
-        delete_response = double('Faraday::Response', status: 500)
+        delete_response = double('Faraday::Response', status: 500, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
         allow_any_instance_of(Faraday::Connection).to receive(:delete).and_return(delete_response)
         send_command('statuspage incident delete latest')
@@ -177,7 +181,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       end
 
       it 'shows a warning if there wasnt an incident to delete' do
-        response = double('Faraday::Response', status: 404)
+        response = double('Faraday::Response', status: 404, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident delete id:2ttv50n0n8zj')
         expect(replies.last).to eq('Incident not found')
@@ -185,7 +189,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
 
       it 'shows an error if there was an issue deleting the incident' do
         get_response = double('Faraday::Response', status: 200, body: incidents_unresolved)
-        delete_response = double('Faraday::Response', status: 500)
+        delete_response = double('Faraday::Response', status: 500, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
         allow_any_instance_of(Faraday::Connection).to receive(:delete).and_return(delete_response)
         send_command('statuspage incident delete id:2ttv50n0n8zj')
@@ -209,7 +213,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       end
 
       it 'shows an error if there was an issue fetching the components' do
-        response = double('Faraday::Response', status: 500)
+        response = double('Faraday::Response', status: 500, body: '')
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage component list')
         expect(replies.last).to eq('Error fetching components')
@@ -217,6 +221,42 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     end
 
     describe '#component_update' do
+      it 'shows an ack if the component is updated via id' do
+        get_response = double('Faraday::Response', status: 200, body: components)
+        patch_response = double('Faraday::Response', status: 200, body: component_update)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:patch).and_return(patch_response)
+        send_command('statuspage component update id:v6z6tpldcw85 status:major_outage')
+        expect(replies.last).to eq('Component v6z6tpldcw85 updated')
+      end
+
+      it 'shows an ack if the component is updated via name' do
+        get_response = double('Faraday::Response', status: 200, body: components)
+        patch_response = double('Faraday::Response', status: 200, body: component_update)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:patch).and_return(patch_response)
+        send_command('statuspage component update name:"Management Portal (example)" status:major_outage')
+        expect(replies.last).to eq('Component v6z6tpldcw85 updated')
+      end
+
+      it 'shows a warning if there is no identifier to the component' do
+        send_command('statuspage component update status:major_outage')
+        expect(replies.last).to eq('Need an identifier for the component')
+      end
+
+      it 'shows a warning if the status is invalid' do
+        send_command('statuspage component update id:v6z6tpldcw85 status:big_problem')
+        expect(replies.last).to eq('Invalid status to use in updates')
+      end
+
+      it 'shows an error if there was an issue updating the component' do
+        get_response = double('Faraday::Response', status: 200, body: components)
+        patch_response = double('Faraday::Response', status: 500, body: '')
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:patch).and_return(patch_response)
+        send_command('statuspage component update id:v6z6tpldcw85 status:major_outage')
+        expect(replies.last).to eq('Error updating component')
+      end
     end
   end
 end

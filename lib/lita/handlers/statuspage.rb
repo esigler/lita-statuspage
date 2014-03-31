@@ -143,18 +143,42 @@ module Lita
       end
 
       def component_update(response)
-        response.reply('Not implemented yet.')
+        args = parse_args(response.matches[0][0])
+        request_args = {}
+        if !args.key?('name') && !args.key?('id')
+          response.reply('Need an identifier for the component')
+        else
+          if args.key?('status')
+            if valid_status?(args['status'])
+              request_args['component[status]'] = args['status']
+            else
+              response.reply('Invalid status to use in updates')
+              return
+            end
+          else
+            request_args['component[status]='] = ''
+          end
+
+          if args.key?('id')
+            response.reply(update_component(args['id'], request_args))
+          elsif args.key?('name')
+            component = component(args['name'])
+            response.reply(update_component(component['id'], request_args))
+          else
+            response.reply('Need an identifier for the component')
+          end
+        end
       end
 
       private
 
       def incident(id)
         incidents = api_request('get', 'incidents')
-        return nil unless incidents && incidents.count > 0
-        incidents.each do |incident|
-          return incident if incident['id'] == id
+        if incidents && incidents.count > 0
+          incidents.each do |incident|
+            return incident if incident['id'] == id
+          end
         end
-        nil
       end
 
       def latest_incident
@@ -191,6 +215,30 @@ module Lita
         end
       end
 
+      def component(identifier)
+        components = api_request('get', 'components')
+        if components && components.count > 0
+          components.each do |component|
+            return component if component['id'] == identifier ||
+                                component['name'] == identifier
+          end
+        end
+      end
+
+      def update_component(id, args)
+        component = component(id)
+        if component
+          result = api_request('patch', "components/#{id}.json", args)
+          if result
+            "Component #{id} updated"
+          else
+            'Error updating component'
+          end
+        else
+          'Component not found'
+        end
+      end
+
       def format_incident(incident)
         name    = incident['name']
         id      = incident['id']
@@ -211,8 +259,19 @@ module Lita
         "id: #{id})"
       end
 
+      def valid_status?(status)
+        %w(operational degraded_performance partial_outage major_outage).include?(status)
+      end
+
       def parse_args(string)
-        # /([a-z]+):(.+)/
+        results = {}
+        # TODO: Error handling on parse errors
+        arg_pairs = Shellwords.split(string)
+        arg_pairs.each do |pair|
+          keyval = pair.split(':', 2)
+          results[keyval[0]] = keyval[1]
+        end
+        results
       end
 
       def api_request(method, component, args = {})
@@ -227,15 +286,18 @@ module Lita
               "/#{component}"
 
         http_response = http.send(method) do |req|
-          req.url url
+          req.url url, args
           req.headers['Authorization'] =
             "OAuth #{Lita.config.handlers.statuspage.api_key}"
-          args.keys do |key|
-            req.params[key] = args[key]
-          end
         end
 
-        MultiJson.load(http_response.body) if http_response.status == 200
+        if http_response.status == 200
+          MultiJson.load(http_response.body)
+        else
+          Lita.logger.error("HTTP #{method} for #{url} with #{args} returned #{http_response.status}")
+          Lita.logger.error(http_response.body)
+          nil
+        end
       end
     end
 

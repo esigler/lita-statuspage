@@ -7,3 +7,4 @@ Lita.load_locales Dir[File.expand_path(
 require 'lita/handlers/statuspage'
 
 require 'multi_json'
+require 'shellwords'
