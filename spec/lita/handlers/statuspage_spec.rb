@@ -141,9 +141,21 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
         expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
       end
 
-      it 'shows a warning if there wasnt an incident to delete'
+      it 'shows a warning if there wasnt an incident to delete' do
+        response = double('Faraday::Response', status: 404)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident delete latest')
+        expect(replies.last).to eq('No latest incident found')
+      end
 
-      it 'shows an error if there was an issue deleting the incident'
+      it 'shows an error if there was an issue deleting the incident' do
+        get_response = double('Faraday::Response', status: 200, body: incidents_unresolved)
+        delete_response = double('Faraday::Response', status: 500)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:delete).and_return(delete_response)
+        send_command('statuspage incident delete latest')
+        expect(replies.last).to eq('Error deleting incident')
+      end
     end
 
     describe '#incident_delete' do

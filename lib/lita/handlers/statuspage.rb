@@ -109,7 +109,11 @@ module Lita
 
       def incident_delete_latest(response)
         incident = latest_incident
-        response.reply(delete_incident(incident['id']))
+        if incident
+          response.reply(delete_incident(incident['id']))
+        else
+          response.reply('No latest incident found')
+        end
       end
 
       def incident_delete(response)
