@@ -1,5 +1,3 @@
-require 'multi_json'
-
 module Lita
   module Handlers
     class Statuspage < Handler
