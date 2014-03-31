@@ -21,6 +21,14 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     File.read('spec/files/incident_deleted.json')
   end
 
+  let(:components) do
+    File.read('spec/files/components.json')
+  end
+
+  let(:components_empty) do
+    '[]'
+  end
+
   it { routes_command('statuspage incident new name:"foo"').to(:incident_new) }
   it { routes_command('statuspage incident update latest').to(:incident_update) }
   it { routes_command('statuspage incident list all').to(:incident_list_all) }
@@ -186,6 +194,26 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     end
 
     describe '#component_list' do
+      it 'shows a list of components if there are any' do
+        response = double('Faraday::Response', status: 200, body: components)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage component list')
+        expect(replies.last).to eq('Management Portal (example) (status: operational, id: v6z6tpldcw85)')
+      end
+
+      it 'shows a warning if there arent any' do
+        response = double('Faraday::Response', status: 200, body: components_empty)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage component list')
+        expect(replies.last).to eq('No components to list')
+      end
+
+      it 'shows an error if there was an issue fetching the components' do
+        response = double('Faraday::Response', status: 500)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage component list')
+        expect(replies.last).to eq('Error fetching components')
+      end
     end
 
     describe '#component_update' do

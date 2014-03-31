@@ -122,7 +122,18 @@ module Lita
       end
 
       def component_list(response)
-        response.reply('Not implemented yet.')
+        components = api_request('get', 'components')
+        if components
+          if components.count > 0
+            components.each do |component|
+              response.reply(format_component(component))
+            end
+          else
+            response.reply('No components to list')
+          end
+        else
+          response.reply('Error fetching components')
+        end
       end
 
       def component_update(response)
@@ -181,6 +192,15 @@ module Lita
         created = Date.parse(incident['created_at'])
         "#{name} (" \
         "created: #{created.strftime('%Y-%m-%d')}, " \
+        "status: #{status}, " \
+        "id: #{id})"
+      end
+
+      def format_component(component)
+        name   = component['name']
+        id     = component['id']
+        status = component['status']
+        "#{name} (" \
         "status: #{status}, " \
         "id: #{id})"
       end
