@@ -96,15 +96,21 @@ module Lita
       end
 
       def incident_list_all(response)
-        response.reply(list_incidents('incidents.json'))
+        list_incidents('incidents.json').each do |msg|
+          response.reply(msg)
+        end
       end
 
       def incident_list_scheduled(response)
-        response.reply(list_incidents('incidents/scheduled.json'))
+        list_incidents('incidents/scheduled.json').each do |msg|
+          response.reply(msg)
+        end
       end
 
       def incident_list_unresolved(response)
-        response.reply(list_incidents('incidents/unresolved.json'))
+        list_incidents('incidents/unresolved.json').each do |msg|
+          response.reply(msg)
+        end
       end
 
       def incident_delete_latest(response)
@@ -159,14 +165,14 @@ module Lita
 
       def list_incidents(resource)
         incidents = api_request('get', resource)
-        response = ''
+        response = []
         if incidents
-          response = 'No incidents to list' unless incidents.count > 0
+          response = ['No incidents to list'] unless incidents.count > 0
           incidents.each do |incident|
-            response += "#{format_incident(incident)}"
+            response.push("#{format_incident(incident)}")
           end
         else
-          response = 'Error fetching incidents'
+          response = ['Error fetching incidents']
         end
         response
       end
