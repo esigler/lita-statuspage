@@ -88,11 +88,60 @@ module Lita
       end
 
       def incident_new(response)
-        response.reply('Not implemented yet.')
+        args = parse_args(response.matches[0][0])
+
+        unless args.key?('name')
+          response.reply('Can\'t create incident, missing incident name')
+          return
+        end
+
+        if args.key?('status') && !valid_incident_status?(args['status'])
+          response.reply('Can\'t create incident, invalid incident state')
+          return
+        end
+
+        if args.key?('twitter') && !valid_twitter_status?(args['twitter'])
+          response.reply('Can\'t create incident, invalid twitter state')
+          return
+        end
+
+        if args.key?('impact') && !valid_impact_value?(args['impact'])
+          response.reply('Can\'t create incident, invalid impact value')
+          return
+        end
+
+        response.reply(create_incident(args))
       end
 
       def incident_update(response)
-        response.reply('Not implemented yet.')
+        args = parse_args(response.matches[0][0])
+
+        unless args.key?('id')
+          response.reply('Can\'t update incident, missing incident ID')
+          return
+        end
+
+        if args.length < 2
+          response.reply('Can\'t update incident, nothing to update')
+          return
+        end
+
+        if args.key?('status') && !valid_incident_status?(args['status'])
+          response.reply('Can\'t update incident, invalid incident state')
+          return
+        end
+
+        if args.key?('twitter') && !valid_twitter_status?(args['twitter'])
+          response.reply('Can\'t update incident, invalid twitter state')
+          return
+        end
+
+        if args.key?('impact') && !valid_impact_value?(args['impact'])
+          response.reply('Can\'t update incident, invalid impact value')
+          return
+        end
+
+        response.reply(update_incident(args['id'], args))
       end
 
       def incident_list_all(response)
@@ -149,7 +198,7 @@ module Lita
           response.reply('Need an identifier for the component')
         else
           if args.key?('status')
-            if valid_status?(args['status'])
+            if valid_component_status?(args['status'])
               request_args['component[status]'] = args['status']
             else
               response.reply('Invalid status to use in updates')
@@ -179,6 +228,7 @@ module Lita
             return incident if incident['id'] == id
           end
         end
+        nil
       end
 
       def latest_incident
@@ -199,6 +249,40 @@ module Lita
           response = ['Error fetching incidents']
         end
         response
+      end
+
+      def create_incident(args)
+        request_args = {}
+        request_args['incident[name]'] = args['name']
+        request_args['incident[status]'] = args['status'] if args.key?('status')
+        request_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
+        request_args['incident[message]'] = args['message'] if args.key?('message')
+        request_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
+        result = api_request('post', 'incidents.json', request_args)
+        if result
+          "Incident #{result['id']} created"
+        else
+          'Error creating incident'
+        end
+      end
+
+      def update_incident(id, args)
+        incident = incident(id)
+        if incident
+          request_args = {}
+          request_args['incident[status]'] = args['status'] if args.key?('status')
+          request_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
+          request_args['incident[message]'] = args['message'] if args.key?('message')
+          request_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
+          result = api_request('patch', "incidents/#{id}.json", request_args)
+          if result
+            "Incident #{id} updated"
+          else
+            'Error updating incident'
+          end
+        else
+          'Can\'t update incident, does not exist'
+        end
       end
 
       def delete_incident(id)
@@ -247,7 +331,7 @@ module Lita
         "#{name} (" \
         "created: #{created.strftime('%Y-%m-%d')}, " \
         "status: #{status}, " \
-        "id: #{id})"
+        "id:#{id})"
       end
 
       def format_component(component)
@@ -256,10 +340,22 @@ module Lita
         status = component['status']
         "#{name} (" \
         "status: #{status}, " \
-        "id: #{id})"
+        "id:#{id})"
       end
 
-      def valid_status?(status)
+      def valid_incident_status?(status)
+        %w(investigating identified monitoring resolved).include?(status)
+      end
+
+      def valid_twitter_status?(status)
+        %w(true t false f).include?(status)
+      end
+
+      def valid_impact_value?(value)
+        %w(minor major critical).include?(value)
+      end
+
+      def valid_component_status?(status)
         %w(operational degraded_performance partial_outage major_outage).include?(status)
       end
 
@@ -291,7 +387,8 @@ module Lita
             "OAuth #{Lita.config.handlers.statuspage.api_key}"
         end
 
-        if http_response.status == 200
+        if http_response.status == 200 ||
+           http_response.status == 201
           MultiJson.load(http_response.body)
         else
           Lita.logger.error("HTTP #{method} for #{url} with #{args} returned #{http_response.status}")

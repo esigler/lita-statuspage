@@ -39,17 +39,17 @@ Lita statuspage incident new name:"<name>"       - Create a new realtime inciden
                              status:<status>     - (Optional) One of: investigating|identified|monitoring|resolved (default: investigating)
                              message:"<message>" - (Optional) The initial message
                              twitter:<state>     - (Optional) Post the new incident to Twitter, one of (true|t|false|f) (default:false)
-                             impact:<state>      - (Optional) Override calculated impact value, one of: (none|minor|major|critical)
+                             impact:<state>      - (Optional) Override calculated impact value, one of: (minor|major|critical)
 ```
 
 #### Update
 
 ```
-Lita statuspage incident update (latest|id:<id>) - Update an incident
-                         status:<status>         - (Optional) One of (investigating|identified|monitoring|resolved) (if realtime) or (scheduled|in_progress|verifying|completed) (if scheduled)
-                         message:"<message>"     - (Optional) The body of the new incident update that will be created
-                         twitter:<state>         - (Optional) Post the new incident update to twitter, one of: (true|t|false|f) (default:false)
-                         impact:<state>          - (Optional) Override calculated impact value, one of (none|minor|major|critical)
+Lita statuspage incident update id:<id>      - Update an incident
+                         status:<status>     - (Optional) One of (investigating|identified|monitoring|resolved) (if realtime) or (scheduled|in_progress|verifying|completed) (if scheduled)
+                         message:"<message>" - (Optional) The body of the new incident update that will be created
+                         twitter:<state>     - (Optional) Post the new incident update to twitter, one of: (true|t|false|f) (default:false)
+                         impact:<state>      - (Optional) Override calculated impact value, one of (minor|major|critical)
 ```
 
 **NOTE:** If either of status or message is modified, a new incident update will be generated. You should update both of these attributes at the same time to avoid two separate incident updates being generated.

@@ -17,8 +17,20 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     File.read('spec/files/incidents_unresolved.json')
   end
 
+  let(:incidents_updated) do
+    File.read('spec/files/incidents_update.json')
+  end
+
+  let(:incident_new) do
+    File.read('spec/files/incident_new.json')
+  end
+
   let(:incident_deleted) do
     File.read('spec/files/incident_deleted.json')
+  end
+
+  let(:incident_updated) do
+    File.read('spec/files/incident_updated.json')
   end
 
   let(:components) do
@@ -68,9 +80,91 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     end
 
     describe '#incident_new' do
+      it 'shows an ack when the incident is created' do
+        response = double('Faraday::Response', status: 201, body: incident_new)
+        allow_any_instance_of(Faraday::Connection).to receive(:post).and_return(response)
+        send_command('statuspage incident new name:"lp0 on fire"')
+        expect(replies.last).to eq('Incident b0m7dz4tzpl3 created')
+      end
+
+      it 'shows a warning if the incident does not have a required name' do
+        send_command('statuspage incident new status:investigating')
+        expect(replies.last).to eq('Can\'t create incident, missing incident name')
+      end
+
+      it 'shows a warning if the incident status is not valid' do
+        send_command('statuspage incident new name:"It dun broke" status:ignoring')
+        expect(replies.last).to eq('Can\'t create incident, invalid incident state')
+      end
+
+      it 'shows a warning if the twitter status is not valid' do
+        send_command('statuspage incident new name:"It dun broke" twitter:lavender')
+        expect(replies.last).to eq('Can\'t create incident, invalid twitter state')
+      end
+
+      it 'shows a warning if the impact value is not valid' do
+        send_command('statuspage incident new name:"It dun broke" impact:apocalypse')
+        expect(replies.last).to eq('Can\'t create incident, invalid impact value')
+      end
+
+      it 'shows an error if there was an issue creating the incident' do
+        response = double('Faraday::Response', status: 500, body: '')
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident new name:"It dun broke"')
+        expect(replies.last).to eq('Error creating incident')
+      end
     end
 
     describe '#incident_update' do
+      it 'shows an ack when the incident is updated' do
+        get_response = double('Faraday::Response', status: 200, body: incidents_updated)
+        patch_response = double('Faraday::Response', status: 200, body: incident_updated)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:patch).and_return(patch_response)
+        send_command('statuspage incident update id:b0m7dz4tzpl3 message:"Howdy"')
+        expect(replies.last).to eq('Incident b0m7dz4tzpl3 updated')
+      end
+
+      it 'shows a warning if the incident does not exist' do
+        response = double('Faraday::Response', status: 200, body: incidents)
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
+        send_command('statuspage incident update id:b0m7dz4tzpl3 message:"Howdy"')
+        expect(replies.last).to eq('Can\'t update incident, does not exist')
+      end
+
+      it 'shows a warning if there is nothing to update' do
+        send_command('statuspage incident update id:b0m7dz4tzpl3')
+        expect(replies.last).to eq('Can\'t update incident, nothing to update')
+      end
+
+      it 'shows a warning if the incident does not have an id' do
+        send_command('statuspage incident update status:investigating')
+        expect(replies.last).to eq('Can\'t update incident, missing incident ID')
+      end
+
+      it 'shows a warning if the incident status is not valid' do
+        send_command('statuspage incident update id:b0m7dz4tzpl3 status:running_away')
+        expect(replies.last).to eq('Can\'t update incident, invalid incident state')
+      end
+
+      it 'shows a warning if the twitter status is not valid' do
+        send_command('statuspage incident update id:b0m7dz4tzpl3 twitter:magenta')
+        expect(replies.last).to eq('Can\'t update incident, invalid twitter state')
+      end
+
+      it 'shows a warning if the impact value is not valid' do
+        send_command('statuspage incident update id:b0m7dz4tzpl3 impact:ragnarok')
+        expect(replies.last).to eq('Can\'t update incident, invalid impact value')
+      end
+
+      it 'shows an error if there was an issue updating the incident' do
+        get_response = double('Faraday::Response', status: 200, body: incidents_updated)
+        patch_response = double('Faraday::Response', status: 500, body: '')
+        allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(get_response)
+        allow_any_instance_of(Faraday::Connection).to receive(:patch).and_return(patch_response)
+        send_command('statuspage incident update id:b0m7dz4tzpl3 message:"Howdy"')
+        expect(replies.last).to eq('Error updating incident')
+      end
     end
 
     describe '#incident_list_all' do
@@ -79,7 +173,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident list all')
         expect(replies.last).to eq('Test Incident (created: 2014-03-24, ' \
-                                   'status: resolved, id: td9ftgzcyz4m)')
+                                   'status: resolved, id:td9ftgzcyz4m)')
       end
 
       it 'shows a warning if there arent any' do
@@ -103,7 +197,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident list scheduled')
         expect(replies.last).to eq('Test Maintenance (created: 2014-03-30, ' \
-                                   'status: scheduled, id: 3tzsm37ryws0)')
+                                   'status: scheduled, id:3tzsm37ryws0)')
       end
 
       it 'shows a warning if there arent any' do
@@ -127,7 +221,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage incident list unresolved')
         expect(replies.last).to eq('Unresolved incident (created: 2014-03-30, ' \
-                                   'status: investigating, id: 2ttv50n0n8zj)')
+                                   'status: investigating, id:2ttv50n0n8zj)')
       end
 
       it 'shows a warning if there arent any' do
@@ -204,7 +298,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
         response = double('Faraday::Response', status: 200, body: components)
         allow_any_instance_of(Faraday::Connection).to receive(:get).and_return(response)
         send_command('statuspage component list')
-        expect(replies.last).to eq('Management Portal (example) (status: operational, id: v6z6tpldcw85)')
+        expect(replies.last).to eq('Management Portal (example) (status: operational, id:v6z6tpldcw85)')
       end
 
       it 'shows a warning if there arent any' do
