@@ -28,6 +28,20 @@ config.handlers.statuspage.page_id = '_your_page_id_here_'
 
 ## Usage
 
+### Overview
+
+A quick "everything's hit the fan" example of how to use this plugin:
+```
+Lita > Lita statuspage incident new name:"Site unavailable" message:"We're looking into it now"
+Incident ABC123 created
+Lita > Lita statuspage incident update id:ABC123 message:"The database server has crashed, rebooting now" status:identified impact:critical
+Incident ABC123 updated
+Lita > Lita statuspage incident update id:ABC123 message:"Database server recovered, the site is back" status:resolved
+Incident ABC123 updated
+Lita > Lita statuspage incident list unresolved
+No incidents to list
+```
+
 ### Incidents
 
 #### Create

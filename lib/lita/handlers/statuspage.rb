@@ -6,7 +6,14 @@ module Lita
         :incident_new,
         command: true,
         help: {
-          'statuspage incident new (...)' => 'Create a new realtime incident'
+          'statuspage incident new name:"<name>"'       => 'Create a new realtime incident',
+          '                        status:<status>'     => '(Optional) One of: investigating|identified|monitoring|resolved ' \
+                                                           '(default: investigating)',
+          '                        message:"<message>"' => '(Optional) The initial message',
+          '                        twitter:<state>'     => '(Optional) Post the new incident to Twitter, one of: ' \
+                                                           '(true|t|false|f) (default:false)',
+          '                        impact:<state>'      => '(Optional) Override calculated impact value, one of: ' \
+                                                           '(minor|major|critical)'
         }
       )
 
@@ -15,7 +22,7 @@ module Lita
         :incident_update,
         command: true,
         help: {
-          'statuspage incident update (...)' => 'Update an incident'
+          'statuspage incident update id:ABC123 (...)' => 'Update an incident (takes same arguments as new)'
         }
       )
 
