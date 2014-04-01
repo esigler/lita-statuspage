@@ -70,8 +70,15 @@ Lita statuspage incident delete id:<id> - Delete a specific incident
 
 ### Components
 
+#### List
+
 ```
 Lita statuspage component list all                       - Lists all components
+```
+
+#### Update
+
+```
 Lita statuspage component update (id:<id>|name:"<name>") - Updates the component
                           status:<status>                - One of (operational|degraded_performance|partial_outage|major_outage|none)
 ```
