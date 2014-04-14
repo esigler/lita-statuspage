@@ -57,6 +57,18 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
   it { routes_command('statuspage component list all').to(:component_list) }
   it { routes_command('statuspage component update latest').to(:component_update) }
 
+  it { routes_command('sp incident new name:"foo"').to(:incident_new) }
+  it { routes_command('sp incident update latest').to(:incident_update) }
+  it { routes_command('sp incident list').to(:incident_list_all) }
+  it { routes_command('sp incident list all').to(:incident_list_all) }
+  it { routes_command('sp incident list scheduled').to(:incident_list_scheduled) }
+  it { routes_command('sp incident list unresolved').to(:incident_list_unresolved) }
+  it { routes_command('sp incident delete latest').to(:incident_delete_latest) }
+  it { routes_command('sp incident delete id:omgwtfbbq').to(:incident_delete) }
+  it { routes_command('sp component list').to(:component_list) }
+  it { routes_command('sp component list all').to(:component_list) }
+  it { routes_command('sp component update latest').to(:component_update) }
+
   describe '.default_config' do
     it 'sets api_key to nil' do
       expect(Lita.config.handlers.statuspage.api_key).to be_nil

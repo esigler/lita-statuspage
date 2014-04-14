@@ -2,90 +2,90 @@ module Lita
   module Handlers
     class Statuspage < Handler
       route(
-        /^statuspage\sincident\snew\s(.+)$/,
+        /^(?:statuspage|sp)\sincident\snew\s(.+)$/,
         :incident_new,
         command: true,
         help: {
-          'statuspage incident new name:"<name>"'       => 'Create a new realtime incident',
-          '                        status:<status>'     => '(Optional) One of: investigating|identified|monitoring|resolved ' \
-                                                           '(default: investigating)',
-          '                        message:"<message>"' => '(Optional) The initial message',
-          '                        twitter:<state>'     => '(Optional) Post the new incident to Twitter, one of: ' \
-                                                           '(true|t|false|f) (default:false)',
-          '                        impact:<state>'      => '(Optional) Override calculated impact value, one of: ' \
+          '(statuspage|sp) incident new name:"<name>"'       => 'Create a new realtime incident',
+          '                             status:<status>'     => '(Optional) One of: investigating|identified|monitoring' \
+                                                                '|resolved (default: investigating)',
+          '                             message:"<message>"' => '(Optional) The initial message',
+          '                             twitter:<state>'     => '(Optional) Post the new incident to Twitter, one of: ' \
+                                                                '(true|t|false|f) (default:false)',
+          '                             impact:<state>'      => '(Optional) Override calculated impact value, one of: ' \
                                                            '(minor|major|critical)'
         }
       )
 
       route(
-        /^statuspage\sincident\supdate\s(.+)$/,
+        /^(?:statuspage|sp)\sincident\supdate\s(.+)$/,
         :incident_update,
         command: true,
         help: {
-          'statuspage incident update id:ABC123 (...)' => 'Update an incident (takes same arguments as new)'
+          '(statuspage|sp) incident update id:ABC123 (...)' => 'Update an incident (takes same arguments as new)'
         }
       )
 
       route(
-        /^statuspage\sincident\slist(\sall)?$/,
+        /^(?:statuspage|sp)\sincident\slist(\sall)?$/,
         :incident_list_all,
         command: true,
         help: {
-          'statuspage incident list all' => 'List all incidents'
+          '(statuspage|sp) incident list all' => 'List all incidents'
         }
       )
 
       route(
-        /^statuspage\sincident\slist\sscheduled$/,
+        /^(?:statuspage|sp)\sincident\slist\sscheduled$/,
         :incident_list_scheduled,
         command: true,
         help: {
-          'statuspage incident list scheduled' => 'List scheduled incidents'
+          '(statuspage|sp) incident list scheduled' => 'List scheduled incidents'
         }
       )
 
       route(
-        /^statuspage\sincident\slist\sunresolved$/,
+        /^(?:statuspage|sp)\sincident\slist\sunresolved$/,
         :incident_list_unresolved,
         command: true,
         help: {
-          'statuspage incident list unresolved' => 'List unresolved incidents'
+          '(statuspage|sp) incident list unresolved' => 'List unresolved incidents'
         }
       )
 
       route(
-        /^statuspage\sincident\sdelete\slatest$/,
+        /^(?:statuspage|sp)\sincident\sdelete\slatest$/,
         :incident_delete_latest,
         command: true,
         help: {
-          'statuspage incident delete latest' => 'Delete latest incident'
+          '(statuspage|sp) incident delete latest' => 'Delete latest incident'
         }
       )
 
       route(
-        /^statuspage\sincident\sdelete\sid:(\w+)$/,
+        /^(?:statuspage|sp)\sincident\sdelete\sid:(\w+)$/,
         :incident_delete,
         command: true,
         help: {
-          'statuspage incident delete id:<id>' => 'Delete a specific incident'
+          '(statuspage|sp) incident delete id:<id>' => 'Delete a specific incident'
         }
       )
 
       route(
-        /^statuspage\scomponent\slist(\sall)?$/,
+        /^(?:statuspage|sp)\scomponent\slist(\sall)?$/,
         :component_list,
         command: true,
         help: {
-          'statuspage component list' => 'Lists all components'
+          '(statuspage|sp) component list' => 'Lists all components'
         }
       )
 
       route(
-        /^statuspage\scomponent\supdate\s(.+)$/,
+        /^(?:statuspage|sp)\scomponent\supdate\s(.+)$/,
         :component_update,
         command: true,
         help: {
-          'statuspage component update' => 'Updates the component'
+          '(statuspage|sp) component update' => 'Updates the component'
         }
       )
 
