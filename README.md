@@ -42,6 +42,8 @@ Lita > Lita statuspage incident list unresolved
 No incidents to list
 ```
 
+**Note:** This plugin also accepts `sp` as the command instead of `statuspage`
+
 ### Incidents
 
 #### Create
