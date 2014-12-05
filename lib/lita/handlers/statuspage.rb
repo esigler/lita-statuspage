@@ -308,11 +308,10 @@ module Lita
 
       def component(identifier)
         components = api_request('get', 'components')
-        if components && components.count > 0
-          components.each do |component|
-            return component if component['id'] == identifier ||
-                                component['name'] == identifier
-          end
+        return unless components && components.count > 0
+        components.each do |component|
+          return component if component['id'] == identifier ||
+                              component['name'] == identifier
         end
       end
 
@@ -384,7 +383,7 @@ module Lita
           fail 'Missing config'
         end
 
-        url = "https://api.statuspage.io/v1/pages/" \
+        url = 'https://api.statuspage.io/v1/pages/' \
               "#{Lita.config.handlers.statuspage.page_id}" \
               "/#{component}"
 

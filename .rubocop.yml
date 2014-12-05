@@ -4,10 +4,16 @@ ClassLength:
 CyclomaticComplexity:
   Max: 10
 
+PerceivedComplexity:
+  Enabled: false
+
 Documentation:
   Enabled: false
 
 FileName:
+  Enabled: false
+
+AbcSize:
   Enabled: false
 
 LineLength:
