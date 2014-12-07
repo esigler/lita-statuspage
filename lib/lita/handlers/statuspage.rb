@@ -1,6 +1,9 @@
 module Lita
   module Handlers
     class Statuspage < Handler
+      config :api_key, required: true
+      config :page_id, required: true
+
       route(
         /^(?:statuspage|sp)\sincident\snew\s(.+)$/,
         :incident_new,
@@ -87,31 +90,11 @@ module Lita
         }
       )
 
-      def self.default_config(config)
-        config.api_key = nil
-        config.page_id = nil
-      end
-
       def incident_new(response)
         args = parse_args(response.matches[0][0])
 
-        unless args.key?('name')
-          response.reply('Can\'t create incident, missing incident name')
-          return
-        end
-
-        if args.key?('status') && !valid_incident_status?(args['status'])
-          response.reply('Can\'t create incident, invalid incident state')
-          return
-        end
-
-        if args.key?('twitter') && !valid_twitter_status?(args['twitter'])
-          response.reply('Can\'t create incident, invalid twitter state')
-          return
-        end
-
-        if args.key?('impact') && !valid_impact_value?(args['impact'])
-          response.reply('Can\'t create incident, invalid impact value')
+        unless valid_args?(args)
+          response.reply('Can\'t create incident, invalid arguments')
           return
         end
 
@@ -121,28 +104,8 @@ module Lita
       def incident_update(response)
         args = parse_args(response.matches[0][0])
 
-        unless args.key?('id')
-          response.reply('Can\'t update incident, missing incident ID')
-          return
-        end
-
-        if args.length < 2
-          response.reply('Can\'t update incident, nothing to update')
-          return
-        end
-
-        if args.key?('status') && !valid_incident_status?(args['status'])
-          response.reply('Can\'t update incident, invalid incident state')
-          return
-        end
-
-        if args.key?('twitter') && !valid_twitter_status?(args['twitter'])
-          response.reply('Can\'t update incident, invalid twitter state')
-          return
-        end
-
-        if args.key?('impact') && !valid_impact_value?(args['impact'])
-          response.reply('Can\'t update incident, invalid impact value')
+        unless valid_args?(args)
+          response.reply('Can\'t update incident, invalid arguments')
           return
         end
 
@@ -169,11 +132,10 @@ module Lita
 
       def incident_delete_latest(response)
         incident = latest_incident
-        if incident
-          response.reply(delete_incident(incident['id']))
-        else
-          response.reply('No latest incident found')
-        end
+
+        return response.reply('No latest incident found') unless incident
+
+        response.reply(delete_incident(incident['id']))
       end
 
       def incident_delete(response)
@@ -183,76 +145,58 @@ module Lita
 
       def component_list(response)
         components = api_request('get', 'components')
-        if components
-          if components.count > 0
-            components.each do |component|
-              response.reply(format_component(component))
-            end
-          else
-            response.reply('No components to list')
-          end
-        else
-          response.reply('Error fetching components')
+
+        return response.reply('Error fetching components') if components.nil?
+        return response.reply('No components to list') if components.count == 0
+
+        components.each do |component|
+          response.reply(format_component(component))
         end
       end
 
       def component_update(response)
         args = parse_args(response.matches[0][0])
-        request_args = {}
-        if !args.key?('name') && !args.key?('id')
-          response.reply('Need an identifier for the component')
-        else
-          if args.key?('status')
-            if valid_component_status?(args['status'])
-              request_args['component[status]'] = args['status']
-            else
-              response.reply('Invalid status to use in updates')
-              return
-            end
-          else
-            request_args['component[status]='] = ''
-          end
+        c_id = identify_component(args)
 
-          if args.key?('id')
-            response.reply(update_component(args['id'], request_args))
-          elsif args.key?('name')
-            component = component(args['name'])
-            response.reply(update_component(component['id'], request_args))
-          else
-            response.reply('Need an identifier for the component')
-          end
+        return response.reply('Need an identifier for the component') unless c_id
+
+        unless valid_component_status?(args['status'])
+          return response.reply('Invalid status to use in updates')
         end
+
+        response.reply(update_component(c_id, 'component[status]' => args['status']))
       end
 
       private
 
       def incident(id)
         incidents = api_request('get', 'incidents')
-        if incidents && incidents.count > 0
-          incidents.each do |incident|
-            return incident if incident['id'] == id
-          end
+        return nil unless incidents && incidents.count > 0
+
+        incidents.each do |incident|
+          return incident if incident['id'] == id
         end
+
         nil
       end
 
       def latest_incident
         incidents = api_request('get', 'incidents')
         return nil unless incidents && incidents.count > 0
+
         incidents.first
       end
 
       def list_incidents(resource)
         incidents = api_request('get', resource)
+        return ['Error fetching incidents'] unless incidents
+
         response = []
-        if incidents
-          response = ['No incidents to list'] unless incidents.count > 0
-          incidents.each do |incident|
-            response.push("#{format_incident(incident)}")
-          end
-        else
-          response = ['Error fetching incidents']
+        response = ['No incidents to list'] unless incidents.count > 0
+        incidents.each do |incident|
+          response.push("#{format_incident(incident)}")
         end
+
         response
       end
 
@@ -263,12 +207,9 @@ module Lita
         api_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
         api_args['incident[message]'] = args['message'] if args.key?('message')
         api_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
+
         result = api_request('post', 'incidents.json', api_args)
-        if result
-          "Incident #{result['id']} created"
-        else
-          'Error creating incident'
-        end
+        result ? "Incident #{result['id']} created" : 'Error creating incident'
       end
 
       def update_incident(id, args)
@@ -280,27 +221,17 @@ module Lita
         api_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
         api_args['incident[message]'] = args['message'] if args.key?('message')
         api_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
-        result = api_request('patch', "incidents/#{id}.json", api_args)
 
-        if result
-          "Incident #{id} updated"
-        else
-          'Error updating incident'
-        end
+        result = api_request('patch', "incidents/#{id}.json", api_args)
+        result ? "Incident #{id} updated" : 'Error updating incident'
       end
 
       def delete_incident(id)
         incident = incident(id)
-        if incident
-          result = api_request('delete', "incidents/#{id}.json")
-          if result
-            "Incident #{id} deleted"
-          else
-            'Error deleting incident'
-          end
-        else
-          'Incident not found'
-        end
+        return 'Incident not found' unless incident
+
+        result = api_request('delete', "incidents/#{id}.json")
+        result ? "Incident #{id} deleted" : 'Error deleting incident'
       end
 
       def component(identifier)
@@ -314,15 +245,20 @@ module Lita
 
       def update_component(id, args)
         component = component(id)
-        if component
-          result = api_request('patch', "components/#{id}.json", args)
-          if result
-            "Component #{id} updated"
-          else
-            'Error updating component'
-          end
-        else
-          'Component not found'
+        return 'Component not found' unless component
+
+        result = api_request('patch', "components/#{id}.json", args)
+        result ? "Component #{id} updated" : 'Error updating component'
+      end
+
+      def identify_component(args)
+        return nil unless args.key?('name') || args.key?('id')
+
+        if args.key?('id')
+          return args['id']
+        elsif args.key?('name')
+          component = component(args['name'])
+          return component['id']
         end
       end
 
@@ -365,6 +301,21 @@ module Lita
            major_outage).include?(status)
       end
 
+      def valid_args?(args)
+        return false unless args.key?('name') || args.key?('id')
+
+        return false if args.key?('status') &&
+                        !valid_incident_status?(args['status'])
+
+        return false if args.key?('twitter') &&
+                        !valid_twitter_status?(args['twitter'])
+
+        return false if args.key?('impact') &&
+                        !valid_impact_value?(args['impact'])
+
+        true
+      end
+
       def parse_args(string)
         results = {}
         # TODO: Error handling on parse errors
@@ -377,31 +328,19 @@ module Lita
       end
 
       def api_request(method, component, args = {})
-        if Lita.config.handlers.statuspage.api_key.nil? ||
-           Lita.config.handlers.statuspage.page_id.nil?
-          Lita.logger.error('Missing API key or Page ID for Statuspage')
-          fail 'Missing config'
-        end
-
-        url = 'https://api.statuspage.io/v1/pages/' \
-              "#{Lita.config.handlers.statuspage.page_id}" \
-              "/#{component}"
+        url = "https://api.statuspage.io/v1/pages/#{config.page_id}/#{component}"
 
         http_response = http.send(method) do |req|
           req.url url, args
-          req.headers['Authorization'] =
-            "OAuth #{Lita.config.handlers.statuspage.api_key}"
+          req.headers['Authorization'] = "OAuth #{config.api_key}"
         end
 
-        if http_response.status == 200 ||
-           http_response.status == 201
-          MultiJson.load(http_response.body)
-        else
-          Lita.logger.error("HTTP #{method} for #{url} with #{args} " \
-                            "returned #{http_response.status}")
-          Lita.logger.error(http_response.body)
-          nil
+        unless http_response.status == 200 || http_response.status == 201
+          Lita.logger.error("#{method} for #{url} with #{args}: #{http_response.status}")
+          return nil
         end
+
+        MultiJson.load(http_response.body)
       end
     end
 

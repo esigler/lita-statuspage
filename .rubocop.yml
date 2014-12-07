@@ -18,6 +18,3 @@ AbcSize:
 
 LineLength:
   Max: 93
-
-MethodLength:
-  Max: 30

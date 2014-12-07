@@ -121,13 +121,6 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     end
   end
 
-  describe 'without valid config' do
-    it 'should error out on any command' do
-      expect { send_command('sp incident list all') }.to \
-        raise_error('Missing config')
-    end
-  end
-
   describe 'with valid config' do
     before do
       Lita.config.handlers.statuspage.api_key = 'foo'
@@ -144,25 +137,25 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       it 'shows a warning if the incident does not have a required name' do
         send_command('sp incident new status:investigating')
         expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'missing incident name')
+                                   'invalid arguments')
       end
 
       it 'shows a warning if the incident status is not valid' do
         send_command('sp incident new name:"It dun broke" status:ignoring')
         expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid incident state')
+                                   'invalid arguments')
       end
 
       it 'shows a warning if the twitter status is not valid' do
         send_command('sp incident new name:"It dun broke" twitter:lavender')
         expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid twitter state')
+                                   'invalid arguments')
       end
 
       it 'shows a warning if the impact value is not valid' do
         send_command('sp incident new name:"It dun broke" impact:apocalypse')
         expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid impact value')
+                                   'invalid arguments')
       end
 
       it 'shows an error if there was an issue creating the incident' do
@@ -187,34 +180,28 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
         expect(replies.last).to eq('Can\'t update incident, does not exist')
       end
 
-      it 'shows a warning if there is nothing to update' do
-        send_command('sp incident update id:b0m7dz4tzpl3')
-        expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'nothing to update')
-      end
-
       it 'shows a warning if the incident does not have an id' do
         send_command('sp incident update status:investigating')
         expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'missing incident ID')
+                                   'invalid arguments')
       end
 
       it 'shows a warning if the incident status is not valid' do
         send_command('sp incident update id:b0m7dz4tzpl3 status:running_away')
         expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid incident state')
+                                   'invalid arguments')
       end
 
       it 'shows a warning if the twitter status is not valid' do
         send_command('sp incident update id:b0m7dz4tzpl3 twitter:magenta')
         expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid twitter state')
+                                   'invalid arguments')
       end
 
       it 'shows a warning if the impact value is not valid' do
         send_command('sp incident update id:b0m7dz4tzpl3 impact:ragnarok')
         expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid impact value')
+                                   'invalid arguments')
       end
 
       it 'shows an error if there was an issue updating the incident' do
