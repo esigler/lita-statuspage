@@ -6,14 +6,8 @@ module Lita
         :incident_new,
         command: true,
         help: {
-          '(statuspage|sp) incident new name:"<name>"'       => 'Create a new realtime incident',
-          '                             status:<status>'     => '(Optional) One of: investigating|identified|monitoring' \
-                                                                '|resolved (default: investigating)',
-          '                             message:"<message>"' => '(Optional) The initial message',
-          '                             twitter:<state>'     => '(Optional) Post the new incident to Twitter, one of: ' \
-                                                                '(true|t|false|f) (default:false)',
-          '                             impact:<state>'      => '(Optional) Override calculated impact value, one of: ' \
-                                                           '(minor|major|critical)'
+          t('help.incident.new.syntax') =>
+          t('help.incident.new.desc')
         }
       )
 
@@ -22,7 +16,8 @@ module Lita
         :incident_update,
         command: true,
         help: {
-          '(statuspage|sp) incident update id:ABC123 (...)' => 'Update an incident (takes same arguments as new)'
+          t('help.incident.update.syntax') =>
+          t('help.incident.update.desc')
         }
       )
 
@@ -31,7 +26,8 @@ module Lita
         :incident_list_all,
         command: true,
         help: {
-          '(statuspage|sp) incident list all' => 'List all incidents'
+          t('help.incident.list_all.syntax') =>
+          t('help.incident.list_all.desc')
         }
       )
 
@@ -40,7 +36,7 @@ module Lita
         :incident_list_scheduled,
         command: true,
         help: {
-          '(statuspage|sp) incident list scheduled' => 'List scheduled incidents'
+          'sp incident list scheduled' => 'List scheduled incidents'
         }
       )
 
@@ -49,7 +45,7 @@ module Lita
         :incident_list_unresolved,
         command: true,
         help: {
-          '(statuspage|sp) incident list unresolved' => 'List unresolved incidents'
+          'sp incident list unresolved' => 'List unresolved incidents'
         }
       )
 
@@ -58,7 +54,7 @@ module Lita
         :incident_delete_latest,
         command: true,
         help: {
-          '(statuspage|sp) incident delete latest' => 'Delete latest incident'
+          'sp incident delete latest' => 'Delete latest incident'
         }
       )
 
@@ -67,7 +63,7 @@ module Lita
         :incident_delete,
         command: true,
         help: {
-          '(statuspage|sp) incident delete id:<id>' => 'Delete a specific incident'
+          'sp incident delete id:<id>' => 'Delete a specific incident'
         }
       )
 
@@ -76,7 +72,8 @@ module Lita
         :component_list,
         command: true,
         help: {
-          '(statuspage|sp) component list' => 'Lists all components'
+          t('help.component.list.syntax') =>
+          t('help.component.list.desc')
         }
       )
 
@@ -85,7 +82,8 @@ module Lita
         :component_update,
         command: true,
         help: {
-          '(statuspage|sp) component update' => 'Updates the component'
+          t('help.component.update.syntax') =>
+          t('help.component.update.desc')
         }
       )
 
@@ -259,13 +257,13 @@ module Lita
       end
 
       def create_incident(args)
-        request_args = {}
-        request_args['incident[name]'] = args['name']
-        request_args['incident[status]'] = args['status'] if args.key?('status')
-        request_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
-        request_args['incident[message]'] = args['message'] if args.key?('message')
-        request_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
-        result = api_request('post', 'incidents.json', request_args)
+        api_args = {}
+        api_args['incident[name]'] = args['name']
+        api_args['incident[status]'] = args['status'] if args.key?('status')
+        api_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
+        api_args['incident[message]'] = args['message'] if args.key?('message')
+        api_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
+        result = api_request('post', 'incidents.json', api_args)
         if result
           "Incident #{result['id']} created"
         else
@@ -275,20 +273,19 @@ module Lita
 
       def update_incident(id, args)
         incident = incident(id)
-        if incident
-          request_args = {}
-          request_args['incident[status]'] = args['status'] if args.key?('status')
-          request_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
-          request_args['incident[message]'] = args['message'] if args.key?('message')
-          request_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
-          result = api_request('patch', "incidents/#{id}.json", request_args)
-          if result
-            "Incident #{id} updated"
-          else
-            'Error updating incident'
-          end
+        return 'Can\'t update incident, does not exist' unless incident
+
+        api_args = {}
+        api_args['incident[status]'] = args['status'] if args.key?('status')
+        api_args['incident[wants_twitter_update]'] = args['twitter'] if args.key?('twitter')
+        api_args['incident[message]'] = args['message'] if args.key?('message')
+        api_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
+        result = api_request('patch', "incidents/#{id}.json", api_args)
+
+        if result
+          "Incident #{id} updated"
         else
-          'Can\'t update incident, does not exist'
+          'Error updating incident'
         end
       end
 
@@ -362,7 +359,10 @@ module Lita
       end
 
       def valid_component_status?(status)
-        %w(operational degraded_performance partial_outage major_outage).include?(status)
+        %w(operational
+           degraded_performance
+           partial_outage
+           major_outage).include?(status)
       end
 
       def parse_args(string)
@@ -397,7 +397,8 @@ module Lita
            http_response.status == 201
           MultiJson.load(http_response.body)
         else
-          Lita.logger.error("HTTP #{method} for #{url} with #{args} returned #{http_response.status}")
+          Lita.logger.error("HTTP #{method} for #{url} with #{args} " \
+                            "returned #{http_response.status}")
           Lita.logger.error(http_response.body)
           nil
         end

@@ -2,3 +2,21 @@ en:
   lita:
     handlers:
       statuspage:
+        help:
+          incident:
+            new:
+              syntax: sp incident new name:"<name>" status:<status> message:"<message>" twitter:<state> impact:<state>
+              desc: Create a new realtime incident'
+            update:
+              syntax: sp incident update id:ABC123 (...)
+              desc: Update an incident (takes same arguments as new)
+            list_all:
+              syntax: sp incident list all
+              desc: List all incidents
+          component:
+            list:
+              syntax: sp component list
+              desc: Lists all components
+            update:
+              syntax: sp component update
+              desc: Updates the component

@@ -17,7 +17,7 @@ AbcSize:
   Enabled: false
 
 LineLength:
-  Max: 130
+  Max: 93
 
 MethodLength:
   Max: 30
