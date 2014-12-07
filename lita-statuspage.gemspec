@@ -3,8 +3,8 @@ Gem::Specification.new do |spec|
   spec.version       = '0.2.0'
   spec.authors       = ['Eric Sigler']
   spec.email         = ['me@esigler.com']
-  spec.description   = 'A Lita handler to interact with Statuspage.io'
-  spec.summary       = 'A Lita handler to interact with Statuspage.io'
+  spec.description   = 'A Statuspage.io plugin for Lita'
+  spec.summary       = 'A Statuspage.io plugin for Lita'
   spec.homepage      = 'https://github.com/esigler/lita-statuspage'
   spec.license       = 'MIT'
   spec.metadata      = { 'lita_plugin_type' => 'handler' }

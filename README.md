@@ -1,10 +1,13 @@
 # lita-statuspage
 
-[![Build Status](https://travis-ci.org/esigler/lita-statuspage.png?branch=master)](https://travis-ci.org/esigler/lita-statuspage)
-[![Code Climate](https://codeclimate.com/github/esigler/lita-statuspage.png)](https://codeclimate.com/github/esigler/lita-statuspage)
-[![Coverage Status](https://coveralls.io/repos/esigler/lita-statuspage/badge.png?branch=master)](https://coveralls.io/r/esigler/lita-statuspage?branch=master)
+[![Build Status](https://img.shields.io/travis/esigler/lita-statupage/master.svg)](https://travis-ci.org/esigler/lita-statuspage)
+[![MIT License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://tldrlegal.com/license/mit-license)
+[![RubyGems :: RMuh Gem Version](http://img.shields.io/gem/v/lita-statuspage.svg)](https://rubygems.org/gems/lita-statuspage)
+[![Coveralls Coverage](https://img.shields.io/coveralls/esigler/lita-statuspage/master.svg)](https://coveralls.io/r/esigler/lita-statuspage)
+[![Code Climate](https://img.shields.io/codeclimate/github/esigler/lita-statuspage.svg)](https://codeclimate.com/github/esigler/lita-statuspage)
+[![Gemnasium](https://img.shields.io/gemnasium/esigler/lita-statuspage.svg)](https://gemnasium.com/esigler/lita-statuspage)
 
-Statuspage.io (http://statuspage.io) handler for updating incidents, service status, etc.
+A ![Statuspage.io](http://statuspage.io) plugin for Lita
 
 ## Installation
 
