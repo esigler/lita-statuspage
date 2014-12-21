@@ -7,7 +7,7 @@
 [![Code Climate](https://img.shields.io/codeclimate/github/esigler/lita-statuspage.svg)](https://codeclimate.com/github/esigler/lita-statuspage)
 [![Gemnasium](https://img.shields.io/gemnasium/esigler/lita-statuspage.svg)](https://gemnasium.com/esigler/lita-statuspage)
 
-A [Statuspage.io](http://statuspage.io) plugin for Lita
+A [Statuspage.io](http://statuspage.io) plugin for [Lita](https://github.com/jimmycuadra/lita).
 
 ## Installation
 
