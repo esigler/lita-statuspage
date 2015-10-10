@@ -111,268 +111,256 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     end
   end
 
-  describe '.default_config' do
-    it 'sets api_key to nil' do
-      expect(Lita.config.handlers.statuspage.api_key).to be_nil
+  before do
+    Lita.config.handlers.statuspage.api_key = 'foo'
+    Lita.config.handlers.statuspage.page_id = 'bar'
+  end
+
+  describe '#incident_new' do
+    it 'shows an ack when the incident is created' do
+      catch(:post, incident_new)
+      send_command('statuspage incident new name:"lp0 on fire"')
+      expect(replies.last).to eq('Incident b0m7dz4tzpl3 created')
     end
 
-    it 'sets page_id to nil' do
-      expect(Lita.config.handlers.statuspage.page_id).to be_nil
+    it 'shows a warning if the incident does not have a required name' do
+      send_command('sp incident new status:investigating')
+      expect(replies.last).to eq('Can\'t create incident, ' \
+                                 'invalid arguments')
+    end
+
+    it 'shows a warning if the incident status is not valid' do
+      send_command('sp incident new name:"It dun broke" status:ignoring')
+      expect(replies.last).to eq('Can\'t create incident, ' \
+                                 'invalid arguments')
+    end
+
+    it 'shows a warning if the twitter status is not valid' do
+      send_command('sp incident new name:"It dun broke" twitter:lavender')
+      expect(replies.last).to eq('Can\'t create incident, ' \
+                                 'invalid arguments')
+    end
+
+    it 'shows a warning if the impact value is not valid' do
+      send_command('sp incident new name:"It dun broke" impact:apocalypse')
+      expect(replies.last).to eq('Can\'t create incident, ' \
+                                 'invalid arguments')
+    end
+
+    it 'shows an error if there was an issue creating the incident' do
+      catch(:get, generic_error)
+      send_command('statuspage incident new name:"It dun broke"')
+      expect(replies.last).to eq('Error creating incident')
     end
   end
 
-  describe 'with valid config' do
-    before do
-      Lita.config.handlers.statuspage.api_key = 'foo'
-      Lita.config.handlers.statuspage.page_id = 'bar'
+  describe '#incident_update' do
+    it 'shows an ack when the incident is updated' do
+      catch(:get, incidents_updated)
+      catch(:patch, incident_updated)
+      send_command('statuspage incident update id:b0m7dz4tzpl3 ' \
+                   'message:"Howdy"')
+      expect(replies.last).to eq('Incident b0m7dz4tzpl3 updated')
     end
 
-    describe '#incident_new' do
-      it 'shows an ack when the incident is created' do
-        catch(:post, incident_new)
-        send_command('statuspage incident new name:"lp0 on fire"')
-        expect(replies.last).to eq('Incident b0m7dz4tzpl3 created')
-      end
-
-      it 'shows a warning if the incident does not have a required name' do
-        send_command('sp incident new status:investigating')
-        expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows a warning if the incident status is not valid' do
-        send_command('sp incident new name:"It dun broke" status:ignoring')
-        expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows a warning if the twitter status is not valid' do
-        send_command('sp incident new name:"It dun broke" twitter:lavender')
-        expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows a warning if the impact value is not valid' do
-        send_command('sp incident new name:"It dun broke" impact:apocalypse')
-        expect(replies.last).to eq('Can\'t create incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows an error if there was an issue creating the incident' do
-        catch(:get, generic_error)
-        send_command('statuspage incident new name:"It dun broke"')
-        expect(replies.last).to eq('Error creating incident')
-      end
+    it 'shows a warning if the incident does not exist' do
+      catch(:get, incidents)
+      send_command('sp incident update id:b0m7dz4tzpl3 message:"Howdy"')
+      expect(replies.last).to eq('Can\'t update incident, does not exist')
     end
 
-    describe '#incident_update' do
-      it 'shows an ack when the incident is updated' do
-        catch(:get, incidents_updated)
-        catch(:patch, incident_updated)
-        send_command('statuspage incident update id:b0m7dz4tzpl3 ' \
-                     'message:"Howdy"')
-        expect(replies.last).to eq('Incident b0m7dz4tzpl3 updated')
-      end
-
-      it 'shows a warning if the incident does not exist' do
-        catch(:get, incidents)
-        send_command('sp incident update id:b0m7dz4tzpl3 message:"Howdy"')
-        expect(replies.last).to eq('Can\'t update incident, does not exist')
-      end
-
-      it 'shows a warning if the incident does not have an id' do
-        send_command('sp incident update status:investigating')
-        expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows a warning if the incident status is not valid' do
-        send_command('sp incident update id:b0m7dz4tzpl3 status:running_away')
-        expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows a warning if the twitter status is not valid' do
-        send_command('sp incident update id:b0m7dz4tzpl3 twitter:magenta')
-        expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows a warning if the impact value is not valid' do
-        send_command('sp incident update id:b0m7dz4tzpl3 impact:ragnarok')
-        expect(replies.last).to eq('Can\'t update incident, ' \
-                                   'invalid arguments')
-      end
-
-      it 'shows an error if there was an issue updating the incident' do
-        catch(:get, incidents_updated)
-        catch(:patch, generic_error)
-        send_command('sp incident update id:b0m7dz4tzpl3 message:"Howdy"')
-        expect(replies.last).to eq('Error updating incident')
-      end
+    it 'shows a warning if the incident does not have an id' do
+      send_command('sp incident update status:investigating')
+      expect(replies.last).to eq('Can\'t update incident, ' \
+                                 'invalid arguments')
     end
 
-    describe '#incident_list_all' do
-      it 'shows a list of incidents if there are any' do
-        catch(:get, incidents)
-        send_command('sp incident list all')
-        expect(replies.last).to eq('Test Incident (created: 2014-03-24, ' \
-                                   'status: resolved, id:td9ftgzcyz4m)')
-      end
-
-      it 'shows a warning if there arent any' do
-        catch(:get, incidents_empty)
-        send_command('sp incident list all')
-        expect(replies.last).to eq('No incidents to list')
-      end
-
-      it 'shows an error if there was an issue fetching the incidents' do
-        catch(:get, generic_error)
-        send_command('sp incident list all')
-        expect(replies.last).to eq('Error fetching incidents')
-      end
+    it 'shows a warning if the incident status is not valid' do
+      send_command('sp incident update id:b0m7dz4tzpl3 status:running_away')
+      expect(replies.last).to eq('Can\'t update incident, ' \
+                                 'invalid arguments')
     end
 
-    describe '#incident_list_scheduled' do
-      it 'shows a list of incidents if there are any' do
-        catch(:get, incidents_scheduled)
-        send_command('sp incident list scheduled')
-        expect(replies.last).to eq('Test Maintenance (created: 2014-03-30, ' \
-                                   'status: scheduled, id:3tzsm37ryws0)')
-      end
-
-      it 'shows a warning if there arent any' do
-        catch(:get, incidents_empty)
-        send_command('sp incident list scheduled')
-        expect(replies.last).to eq('No incidents to list')
-      end
-
-      it 'shows an error if there was an issue fetching the incidents' do
-        catch(:get, generic_error)
-        send_command('sp incident list scheduled')
-        expect(replies.last).to eq('Error fetching incidents')
-      end
+    it 'shows a warning if the twitter status is not valid' do
+      send_command('sp incident update id:b0m7dz4tzpl3 twitter:magenta')
+      expect(replies.last).to eq('Can\'t update incident, ' \
+                                 'invalid arguments')
     end
 
-    describe '#incident_list_unresolved' do
-      it 'shows a list of incidents if there are any' do
-        catch(:get, incidents_unresolved)
-        send_command('statuspage incident list unresolved')
-        expect(replies.last).to eq('Unresolved incident (created: ' \
-                                   '2014-03-30, status: investigating, ' \
-                                   'id:2ttv50n0n8zj)')
-      end
-
-      it 'shows a warning if there arent any' do
-        catch(:get, incidents_empty)
-        send_command('statuspage incident list scheduled')
-        expect(replies.last).to eq('No incidents to list')
-      end
-
-      it 'shows an error if there was an issue fetching the incidents' do
-        catch(:get, generic_error)
-        send_command('statuspage incident list scheduled')
-        expect(replies.last).to eq('Error fetching incidents')
-      end
+    it 'shows a warning if the impact value is not valid' do
+      send_command('sp incident update id:b0m7dz4tzpl3 impact:ragnarok')
+      expect(replies.last).to eq('Can\'t update incident, ' \
+                                 'invalid arguments')
     end
 
-    describe '#incident_delete_latest' do
-      it 'shows an ack if the incident was deleted' do
-        catch(:get, incidents_unresolved)
-        catch(:delete, incident_deleted)
-        send_command('statuspage incident delete latest')
-        expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
-      end
+    it 'shows an error if there was an issue updating the incident' do
+      catch(:get, incidents_updated)
+      catch(:patch, generic_error)
+      send_command('sp incident update id:b0m7dz4tzpl3 message:"Howdy"')
+      expect(replies.last).to eq('Error updating incident')
+    end
+  end
 
-      it 'shows a warning if there wasnt an incident to delete' do
-        catch(:get, generic_missing)
-        send_command('statuspage incident delete latest')
-        expect(replies.last).to eq('No latest incident found')
-      end
-
-      it 'shows an error if there was an issue deleting the incident' do
-        catch(:get, incidents_unresolved)
-        catch(:delete, generic_error)
-        send_command('statuspage incident delete latest')
-        expect(replies.last).to eq('Error deleting incident')
-      end
+  describe '#incident_list_all' do
+    it 'shows a list of incidents if there are any' do
+      catch(:get, incidents)
+      send_command('sp incident list all')
+      expect(replies.last).to eq('Test Incident (created: 2014-03-24, ' \
+                                 'status: resolved, id:td9ftgzcyz4m)')
     end
 
-    describe '#incident_delete' do
-      it 'shows an ack if the incident was deleted' do
-        catch(:get, incidents_unresolved)
-        catch(:delete, incident_deleted)
-        send_command('statuspage incident delete id:2ttv50n0n8zj')
-        expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
-      end
-
-      it 'shows a warning if there wasnt an incident to delete' do
-        catch(:get, generic_missing)
-        send_command('statuspage incident delete id:2ttv50n0n8zj')
-        expect(replies.last).to eq('Incident not found')
-      end
-
-      it 'shows an error if there was an issue deleting the incident' do
-        catch(:get, incidents_unresolved)
-        catch(:delete, generic_error)
-        send_command('statuspage incident delete id:2ttv50n0n8zj')
-        expect(replies.last).to eq('Error deleting incident')
-      end
+    it 'shows a warning if there arent any' do
+      catch(:get, incidents_empty)
+      send_command('sp incident list all')
+      expect(replies.last).to eq('No incidents to list')
     end
 
-    describe '#component_list' do
-      it 'shows a list of components if there are any' do
-        catch(:get, components)
-        send_command('statuspage component list')
-        expect(replies.last).to eq('Management Portal (example) ' \
-                                   '(status: operational, id:v6z6tpldcw85)')
-      end
+    it 'shows an error if there was an issue fetching the incidents' do
+      catch(:get, generic_error)
+      send_command('sp incident list all')
+      expect(replies.last).to eq('Error fetching incidents')
+    end
+  end
 
-      it 'shows a warning if there arent any' do
-        catch(:get, components_empty)
-        send_command('statuspage component list')
-        expect(replies.last).to eq('No components to list')
-      end
-
-      it 'shows an error if there was an issue fetching the components' do
-        catch(:get, generic_error)
-        send_command('statuspage component list')
-        expect(replies.last).to eq('Error fetching components')
-      end
+  describe '#incident_list_scheduled' do
+    it 'shows a list of incidents if there are any' do
+      catch(:get, incidents_scheduled)
+      send_command('sp incident list scheduled')
+      expect(replies.last).to eq('Test Maintenance (created: 2014-03-30, ' \
+                                 'status: scheduled, id:3tzsm37ryws0)')
     end
 
-    describe '#component_update' do
-      it 'shows an ack if the component is updated via id' do
-        catch(:get, components)
-        catch(:patch, component_update)
-        send_command('sp component update id:v6z6tpldcw85 status:major_outage')
-        expect(replies.last).to eq('Component v6z6tpldcw85 updated')
-      end
+    it 'shows a warning if there arent any' do
+      catch(:get, incidents_empty)
+      send_command('sp incident list scheduled')
+      expect(replies.last).to eq('No incidents to list')
+    end
 
-      it 'shows an ack if the component is updated via name' do
-        catch(:get, components)
-        catch(:patch, component_update)
-        send_command('sp component update name:"Management Portal ' \
-                     '(example)" status:major_outage')
-        expect(replies.last).to eq('Component v6z6tpldcw85 updated')
-      end
+    it 'shows an error if there was an issue fetching the incidents' do
+      catch(:get, generic_error)
+      send_command('sp incident list scheduled')
+      expect(replies.last).to eq('Error fetching incidents')
+    end
+  end
 
-      it 'shows a warning if there is no identifier to the component' do
-        send_command('sp component update status:major_outage')
-        expect(replies.last).to eq('Need an identifier for the component')
-      end
+  describe '#incident_list_unresolved' do
+    it 'shows a list of incidents if there are any' do
+      catch(:get, incidents_unresolved)
+      send_command('statuspage incident list unresolved')
+      expect(replies.last).to eq('Unresolved incident (created: ' \
+                                 '2014-03-30, status: investigating, ' \
+                                 'id:2ttv50n0n8zj)')
+    end
 
-      it 'shows a warning if the status is invalid' do
-        send_command('sp component update id:v6z6tpldcw85 status:big_problem')
-        expect(replies.last).to eq('Invalid status to use in updates')
-      end
+    it 'shows a warning if there arent any' do
+      catch(:get, incidents_empty)
+      send_command('statuspage incident list scheduled')
+      expect(replies.last).to eq('No incidents to list')
+    end
 
-      it 'shows an error if there was an issue updating the component' do
-        catch(:get, components)
-        catch(:patch, generic_error)
-        send_command('sp component update id:v6z6tpldcw85 status:major_outage')
-        expect(replies.last).to eq('Error updating component')
-      end
+    it 'shows an error if there was an issue fetching the incidents' do
+      catch(:get, generic_error)
+      send_command('statuspage incident list scheduled')
+      expect(replies.last).to eq('Error fetching incidents')
+    end
+  end
+
+  describe '#incident_delete_latest' do
+    it 'shows an ack if the incident was deleted' do
+      catch(:get, incidents_unresolved)
+      catch(:delete, incident_deleted)
+      send_command('statuspage incident delete latest')
+      expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
+    end
+
+    it 'shows a warning if there wasnt an incident to delete' do
+      catch(:get, generic_missing)
+      send_command('statuspage incident delete latest')
+      expect(replies.last).to eq('No latest incident found')
+    end
+
+    it 'shows an error if there was an issue deleting the incident' do
+      catch(:get, incidents_unresolved)
+      catch(:delete, generic_error)
+      send_command('statuspage incident delete latest')
+      expect(replies.last).to eq('Error deleting incident')
+    end
+  end
+
+  describe '#incident_delete' do
+    it 'shows an ack if the incident was deleted' do
+      catch(:get, incidents_unresolved)
+      catch(:delete, incident_deleted)
+      send_command('statuspage incident delete id:2ttv50n0n8zj')
+      expect(replies.last).to eq('Incident 2ttv50n0n8zj deleted')
+    end
+
+    it 'shows a warning if there wasnt an incident to delete' do
+      catch(:get, generic_missing)
+      send_command('statuspage incident delete id:2ttv50n0n8zj')
+      expect(replies.last).to eq('Incident not found')
+    end
+
+    it 'shows an error if there was an issue deleting the incident' do
+      catch(:get, incidents_unresolved)
+      catch(:delete, generic_error)
+      send_command('statuspage incident delete id:2ttv50n0n8zj')
+      expect(replies.last).to eq('Error deleting incident')
+    end
+  end
+
+  describe '#component_list' do
+    it 'shows a list of components if there are any' do
+      catch(:get, components)
+      send_command('statuspage component list')
+      expect(replies.last).to eq('Management Portal (example) ' \
+                                 '(status: operational, id:v6z6tpldcw85)')
+    end
+
+    it 'shows a warning if there arent any' do
+      catch(:get, components_empty)
+      send_command('statuspage component list')
+      expect(replies.last).to eq('No components to list')
+    end
+
+    it 'shows an error if there was an issue fetching the components' do
+      catch(:get, generic_error)
+      send_command('statuspage component list')
+      expect(replies.last).to eq('Error fetching components')
+    end
+  end
+
+  describe '#component_update' do
+    it 'shows an ack if the component is updated via id' do
+      catch(:get, components)
+      catch(:patch, component_update)
+      send_command('sp component update id:v6z6tpldcw85 status:major_outage')
+      expect(replies.last).to eq('Component v6z6tpldcw85 updated')
+    end
+
+    it 'shows an ack if the component is updated via name' do
+      catch(:get, components)
+      catch(:patch, component_update)
+      send_command('sp component update name:"Management Portal ' \
+                   '(example)" status:major_outage')
+      expect(replies.last).to eq('Component v6z6tpldcw85 updated')
+    end
+
+    it 'shows a warning if there is no identifier to the component' do
+      send_command('sp component update status:major_outage')
+      expect(replies.last).to eq('Need an identifier for the component')
+    end
+
+    it 'shows a warning if the status is invalid' do
+      send_command('sp component update id:v6z6tpldcw85 status:big_problem')
+      expect(replies.last).to eq('Invalid status to use in updates')
+    end
+
+    it 'shows an error if there was an issue updating the component' do
+      catch(:get, components)
+      catch(:patch, generic_error)
+      send_command('sp component update id:v6z6tpldcw85 status:major_outage')
+      expect(replies.last).to eq('Error updating component')
     end
   end
 end
