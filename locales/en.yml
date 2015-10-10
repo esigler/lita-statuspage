@@ -2,6 +2,15 @@ en:
   lita:
     handlers:
       statuspage:
+        component:
+          updated: "Component %{id} updated"
+          not_found: Component not found
+          none: No components
+          invalid_status: Invalid status to use in updates
+          need_identifier: Need an identifier for the component
+        error:
+          invalid_arguments: "Error: invalid arguments"
+          api_request: Error making API request
         help:
           incident:
             new:
@@ -13,6 +22,18 @@ en:
             list_all:
               syntax: sp incident list all
               desc: List all incidents
+            list_sch:
+              syntax: sp incident list scheduled
+              desc: List scheduled incidents
+            list_unr:
+              syntax: sp incident list unresolved
+              desc: List unresolved incidents
+            delete_l:
+              syntax: sp incident delete latest
+              desc: Delete latest incident
+            delete_i:
+              syntax: sp incident delete id:<id>
+              desc: Delete a specific incident
           component:
             list:
               syntax: sp component list
@@ -20,3 +41,8 @@ en:
             update:
               syntax: sp component update
               desc: Updates the component
+        incident:
+          created: "Incident %{id} created"
+          deleted: "Incident %{id} deleted"
+          updated: "Incident %{id} updated"
+          not_found: Incident not found

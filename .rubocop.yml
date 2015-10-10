@@ -8,13 +8,15 @@ PerceivedComplexity:
   Enabled: false
 
 Documentation:
-  Enabled: false
+  Exclude:
+    - lib/lita/handlers/statuspage.rb
 
 FileName:
-  Enabled: false
+  Exclude:
+    - lib/lita-statuspage.rb
 
 AbcSize:
   Enabled: false
 
 LineLength:
-  Max: 93
+  Max: 130

@@ -9,8 +9,7 @@ module Lita
         :incident_new,
         command: true,
         help: {
-          t('help.incident.new.syntax') =>
-          t('help.incident.new.desc')
+          t('help.incident.new.syntax') => t('help.incident.new.desc')
         }
       )
 
@@ -19,8 +18,7 @@ module Lita
         :incident_update,
         command: true,
         help: {
-          t('help.incident.update.syntax') =>
-          t('help.incident.update.desc')
+          t('help.incident.update.syntax') => t('help.incident.update.desc')
         }
       )
 
@@ -29,8 +27,7 @@ module Lita
         :incident_list_all,
         command: true,
         help: {
-          t('help.incident.list_all.syntax') =>
-          t('help.incident.list_all.desc')
+          t('help.incident.list_all.syntax') => t('help.incident.list_all.desc')
         }
       )
 
@@ -39,7 +36,7 @@ module Lita
         :incident_list_scheduled,
         command: true,
         help: {
-          'sp incident list scheduled' => 'List scheduled incidents'
+          t('help.incident.list_sch.syntax') => t('help.incident.list_sch.desc')
         }
       )
 
@@ -48,7 +45,7 @@ module Lita
         :incident_list_unresolved,
         command: true,
         help: {
-          'sp incident list unresolved' => 'List unresolved incidents'
+          t('help.incident.list_unr.syntax') => t('help.incident.list_unr.desc')
         }
       )
 
@@ -57,7 +54,7 @@ module Lita
         :incident_delete_latest,
         command: true,
         help: {
-          'sp incident delete latest' => 'Delete latest incident'
+          t('help.incident.delete_l.syntax') => t('help.incident.delete_l.desc')
         }
       )
 
@@ -66,7 +63,7 @@ module Lita
         :incident_delete,
         command: true,
         help: {
-          'sp incident delete id:<id>' => 'Delete a specific incident'
+          t('help.incident.delete_i.syntax') => t('help.incident.delete_i.desc')
         }
       )
 
@@ -75,8 +72,7 @@ module Lita
         :component_list,
         command: true,
         help: {
-          t('help.component.list.syntax') =>
-          t('help.component.list.desc')
+          t('help.component.list.syntax') => t('help.component.list.desc')
         }
       )
 
@@ -85,18 +81,14 @@ module Lita
         :component_update,
         command: true,
         help: {
-          t('help.component.update.syntax') =>
-          t('help.component.update.desc')
+          t('help.component.update.syntax') => t('help.component.update.desc')
         }
       )
 
       def incident_new(response)
         args = parse_args(response.matches[0][0])
 
-        unless valid_args?(args)
-          response.reply('Can\'t create incident, invalid arguments')
-          return
-        end
+        return response.reply(t('error.invalid_arguments')) unless valid_args?(args)
 
         response.reply(create_incident(args))
       end
@@ -104,10 +96,7 @@ module Lita
       def incident_update(response)
         args = parse_args(response.matches[0][0])
 
-        unless valid_args?(args)
-          response.reply('Can\'t update incident, invalid arguments')
-          return
-        end
+        return response.reply(t('error.invalid_arguments')) unless valid_args?(args)
 
         response.reply(update_incident(args['id'], args))
       end
@@ -133,7 +122,7 @@ module Lita
       def incident_delete_latest(response)
         incident = latest_incident
 
-        return response.reply('No latest incident found') unless incident
+        return response.reply(t('incident.not_found')) unless incident
 
         response.reply(delete_incident(incident['id']))
       end
@@ -146,8 +135,8 @@ module Lita
       def component_list(response)
         components = api_request('get', 'components')
 
-        return response.reply('Error fetching components') if components.nil?
-        return response.reply('No components to list') if components.count == 0
+        return response.reply(t('error.api_request')) if components.nil?
+        return response.reply(t('component.none')) if components.count == 0
 
         components.each do |component|
           response.reply(format_component(component))
@@ -158,11 +147,8 @@ module Lita
         args = parse_args(response.matches[0][0])
         c_id = identify_component(args)
 
-        return response.reply('Need an identifier for the component') unless c_id
-
-        unless valid_component_status?(args['status'])
-          return response.reply('Invalid status to use in updates')
-        end
+        return response.reply(t('component.need_identifier')) unless c_id
+        return response.reply(t('component.invalid_status')) unless valid_component_status?(args['status'])
 
         response.reply(update_component(c_id, 'component[status]' => args['status']))
       end
@@ -189,7 +175,7 @@ module Lita
 
       def list_incidents(resource)
         incidents = api_request('get', resource)
-        return ['Error fetching incidents'] unless incidents
+        return [t('error.api_request')] unless incidents
 
         response = []
         response = ['No incidents to list'] unless incidents.count > 0
@@ -209,12 +195,12 @@ module Lita
         api_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
 
         result = api_request('post', 'incidents.json', api_args)
-        result ? "Incident #{result['id']} created" : 'Error creating incident'
+        result ? t('incident.created', id: result['id']) : t('error.api_request')
       end
 
       def update_incident(id, args)
         incident = incident(id)
-        return 'Can\'t update incident, does not exist' unless incident
+        return t('incident.not_found') unless incident
 
         api_args = {}
         api_args['incident[status]'] = args['status'] if args.key?('status')
@@ -223,15 +209,15 @@ module Lita
         api_args['incident[impact_override]'] = args['impact'] if args.key?('impact')
 
         result = api_request('patch', "incidents/#{id}.json", api_args)
-        result ? "Incident #{id} updated" : 'Error updating incident'
+        result ? t('incident.updated', id: id) : t('error.api_request')
       end
 
       def delete_incident(id)
         incident = incident(id)
-        return 'Incident not found' unless incident
+        return t('incident.not_found') unless incident
 
         result = api_request('delete', "incidents/#{id}.json")
-        result ? "Incident #{id} deleted" : 'Error deleting incident'
+        result ? t('incident.deleted', id: id) : t('error.api_request')
       end
 
       def component(identifier)
@@ -245,10 +231,10 @@ module Lita
 
       def update_component(id, args)
         component = component(id)
-        return 'Component not found' unless component
+        return t('component.not_found') unless component
 
         result = api_request('patch', "components/#{id}.json", args)
-        result ? "Component #{id} updated" : 'Error updating component'
+        result ? t('component.updated', id: id) : t('error.api_request')
       end
 
       def identify_component(args)

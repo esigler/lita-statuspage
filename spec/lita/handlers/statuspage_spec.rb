@@ -125,32 +125,28 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
 
     it 'shows a warning if the incident does not have a required name' do
       send_command('sp incident new status:investigating')
-      expect(replies.last).to eq('Can\'t create incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows a warning if the incident status is not valid' do
       send_command('sp incident new name:"It dun broke" status:ignoring')
-      expect(replies.last).to eq('Can\'t create incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows a warning if the twitter status is not valid' do
       send_command('sp incident new name:"It dun broke" twitter:lavender')
-      expect(replies.last).to eq('Can\'t create incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows a warning if the impact value is not valid' do
       send_command('sp incident new name:"It dun broke" impact:apocalypse')
-      expect(replies.last).to eq('Can\'t create incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows an error if there was an issue creating the incident' do
       catch(:get, generic_error)
       send_command('statuspage incident new name:"It dun broke"')
-      expect(replies.last).to eq('Error creating incident')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -166,38 +162,34 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     it 'shows a warning if the incident does not exist' do
       catch(:get, incidents)
       send_command('sp incident update id:b0m7dz4tzpl3 message:"Howdy"')
-      expect(replies.last).to eq('Can\'t update incident, does not exist')
+      expect(replies.last).to eq('Incident not found')
     end
 
     it 'shows a warning if the incident does not have an id' do
       send_command('sp incident update status:investigating')
-      expect(replies.last).to eq('Can\'t update incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows a warning if the incident status is not valid' do
       send_command('sp incident update id:b0m7dz4tzpl3 status:running_away')
-      expect(replies.last).to eq('Can\'t update incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows a warning if the twitter status is not valid' do
       send_command('sp incident update id:b0m7dz4tzpl3 twitter:magenta')
-      expect(replies.last).to eq('Can\'t update incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows a warning if the impact value is not valid' do
       send_command('sp incident update id:b0m7dz4tzpl3 impact:ragnarok')
-      expect(replies.last).to eq('Can\'t update incident, ' \
-                                 'invalid arguments')
+      expect(replies.last).to eq('Error: invalid arguments')
     end
 
     it 'shows an error if there was an issue updating the incident' do
       catch(:get, incidents_updated)
       catch(:patch, generic_error)
       send_command('sp incident update id:b0m7dz4tzpl3 message:"Howdy"')
-      expect(replies.last).to eq('Error updating incident')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -218,7 +210,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     it 'shows an error if there was an issue fetching the incidents' do
       catch(:get, generic_error)
       send_command('sp incident list all')
-      expect(replies.last).to eq('Error fetching incidents')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -239,7 +231,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     it 'shows an error if there was an issue fetching the incidents' do
       catch(:get, generic_error)
       send_command('sp incident list scheduled')
-      expect(replies.last).to eq('Error fetching incidents')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -261,7 +253,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     it 'shows an error if there was an issue fetching the incidents' do
       catch(:get, generic_error)
       send_command('statuspage incident list scheduled')
-      expect(replies.last).to eq('Error fetching incidents')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -276,14 +268,14 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     it 'shows a warning if there wasnt an incident to delete' do
       catch(:get, generic_missing)
       send_command('statuspage incident delete latest')
-      expect(replies.last).to eq('No latest incident found')
+      expect(replies.last).to eq('Incident not found')
     end
 
     it 'shows an error if there was an issue deleting the incident' do
       catch(:get, incidents_unresolved)
       catch(:delete, generic_error)
       send_command('statuspage incident delete latest')
-      expect(replies.last).to eq('Error deleting incident')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -305,7 +297,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       catch(:get, incidents_unresolved)
       catch(:delete, generic_error)
       send_command('statuspage incident delete id:2ttv50n0n8zj')
-      expect(replies.last).to eq('Error deleting incident')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -320,13 +312,13 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
     it 'shows a warning if there arent any' do
       catch(:get, components_empty)
       send_command('statuspage component list')
-      expect(replies.last).to eq('No components to list')
+      expect(replies.last).to eq('No components')
     end
 
     it 'shows an error if there was an issue fetching the components' do
       catch(:get, generic_error)
       send_command('statuspage component list')
-      expect(replies.last).to eq('Error fetching components')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 
@@ -360,7 +352,7 @@ describe Lita::Handlers::Statuspage, lita_handler: true do
       catch(:get, components)
       catch(:patch, generic_error)
       send_command('sp component update id:v6z6tpldcw85 status:major_outage')
-      expect(replies.last).to eq('Error updating component')
+      expect(replies.last).to eq('Error making API request')
     end
   end
 end
