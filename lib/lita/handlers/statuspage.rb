@@ -198,9 +198,9 @@ module Lita
         result ? t('incident.created', id: result['id']) : t('error.api_request')
       end
 
+      # rubocop:disable Metrics/CyclomaticComplexity
       def update_incident(id, args)
-        incident = incident(id)
-        return t('incident.not_found') unless incident
+        return t('incident.not_found') unless incident(id)
 
         api_args = {}
         api_args['incident[status]'] = args['status'] if args.key?('status')
@@ -211,6 +211,7 @@ module Lita
         result = api_request('patch', "incidents/#{id}.json", api_args)
         result ? t('incident.updated', id: id) : t('error.api_request')
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
 
       def delete_incident(id)
         incident = incident(id)
@@ -287,6 +288,8 @@ module Lita
            major_outage).include?(status)
       end
 
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
       def valid_args?(args)
         return false unless args.key?('name') || args.key?('id')
 
@@ -301,6 +304,8 @@ module Lita
 
         true
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/PerceivedComplexity
 
       def parse_args(string)
         results = {}
