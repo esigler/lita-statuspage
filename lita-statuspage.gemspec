@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = 'lita-statuspage'
-  spec.version       = '0.2.0'
+  spec.version       = '0.3.0'
   spec.authors       = ['Eric Sigler']
   spec.email         = ['me@esigler.com']
   spec.description   = 'A Statuspage.io plugin for Lita'

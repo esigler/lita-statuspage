@@ -1,6 +1,6 @@
 # lita-statuspage
 
-[![Build Status](https://img.shields.io/travis/esigler/lita-statupage/master.svg)](https://travis-ci.org/esigler/lita-statuspage)
+[![Build Status](https://img.shields.io/travis/esigler/lita-statuspage/master.svg)](https://travis-ci.org/esigler/lita-statuspage)
 [![MIT License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://tldrlegal.com/license/mit-license)
 [![RubyGems :: RMuh Gem Version](http://img.shields.io/gem/v/lita-statuspage.svg)](https://rubygems.org/gems/lita-statuspage)
 [![Coveralls Coverage](https://img.shields.io/coveralls/esigler/lita-statuspage/master.svg)](https://coveralls.io/r/esigler/lita-statuspage)
